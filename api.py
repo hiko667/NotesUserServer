@@ -33,7 +33,17 @@ class database_proxy():
             self.messenger.execute(f"INSERT INTO users (id, username, password, token) VALUES (?, ?, ?, ?)", (new_id, username, password, new_token))
         self.connection.commit()
     def verify_user(self, username, password):
-        pass
+        self.messenger.execute("SELECT username, password, token FROM users WHERE username = ?", (username,))
+        response = self.messenger.fetchone()
+        print(response)
+        if response == None:
+            raise Exception(f"No account for {username}")
+        else:
+            if password == response[1]:
+                return response[2]
+            else:
+                raise Exception(f"Wrong password")
+
     def update_password(self, username, token, new_password):
         pass
     def delete_user(self, username, token):
@@ -69,7 +79,7 @@ class server():
             except Exception as e:
                 return jsonify({"error": f"An error has occured: {e}"}), 400
             return jsonify({"success": "Successfuly created new account", "username": f"{username}"})
-        @self.app.route('api/user/verify_login', methods = ['GET'])
+        @self.app.route('/api/user/verify_login', methods = ['GET'])
         def verify_user():
             data = request.get_json()
             username = data.get("username")
@@ -77,10 +87,10 @@ class server():
             if not username or not password:
                 return jsonify({"error": "Missing name or password"}), 406
             try:
-                self.db_communication.verify_user(username, password)
+                response = self.db_communication.verify_user(username, password)
             except Exception as e:
                 return jsonify({"error": f"An error has occuerd: {e}"}), 400
-            return jsonify({"success": "Successfuly verified", "username": f"{username}", "token": f"{password}"})
+            return jsonify({"success": "Successfuly verified", "username": f"{username}", "token": f"{response}"})
         
         
         
