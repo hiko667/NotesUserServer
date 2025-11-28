@@ -35,7 +35,6 @@ class database_proxy():
     def verify_user(self, username, password):
         self.messenger.execute("SELECT username, password, token FROM users WHERE username = ?", (username,))
         response = self.messenger.fetchone()
-        print(response)
         if response == None:
             raise Exception(f"No account for {username}")
         else:
@@ -43,9 +42,20 @@ class database_proxy():
                 return response[2]
             else:
                 raise Exception(f"Wrong password")
-
+    def verify_token(self, username, token)->bool: 
+        self.messenger.execute("SELECT token FROM users WHERE username=?", (username,))
+        response = self.messenger.fetchone()
+        if response == None:
+            raise Exception(f"Failed to verify user {username}: no such user")
+        else:
+            if response[0] == token:
+                return True
+            else:
+                raise Exception(f"Failed to verify user {username}: wrong or damaged token")
     def update_password(self, username, token, new_password):
-        pass
+        self.verify_token(username, token)
+        self.messenger.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username, ))
+        self.connection.commit()
     def delete_user(self, username, token):
         pass
     #note handling
@@ -91,6 +101,17 @@ class server():
             except Exception as e:
                 return jsonify({"error": f"An error has occuerd: {e}"}), 400
             return jsonify({"success": "Successfuly verified", "username": f"{username}", "token": f"{response}"})
+        @self.app.route('/api/user/update', methods = ['PATCH'])
+        def update_password():
+            data = request.get_json()
+            username = data.get("username")
+            new_password = data.get("new_password")
+            token = data.get("token")
+            try:   
+                self.db_communication.update_password(username, token, new_password)
+            except Exception as e:
+                return jsonify({"error": f"An error has occured: {e}"}), 400
+            return jsonify({"success": f"Successfuly updated password for user: {username}"}), 202
         
         
         
