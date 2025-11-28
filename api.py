@@ -60,19 +60,31 @@ class server():
         @self.app.route('/api/user/new', methods = ["POST"])
         def new_user():
             data = request.get_json()
-            name = data.get("name")
+            username = data.get("username")
             password = data.get("password")
-            print(name, password)
-            if not name or not password:
-                return jsonify({"error": "Missing name or password"}), 400
+            if not username or not password:
+                return jsonify({"error": "Missing name or password"}), 406
             try:
-                self.db_communication.new_user(name, password)
+                self.db_communication.new_user(username, password)
             except Exception as e:
-                return jsonify({"error": f"An error has accured: {e}"}), 400
-            return jsonify({"success": "Successfuly created new account", "username": f"{name}"})
+                return jsonify({"error": f"An error has occured: {e}"}), 400
+            return jsonify({"success": "Successfuly created new account", "username": f"{username}"})
+        @self.app.route('api/user/verify_login', methods = ['GET'])
+        def verify_user():
+            data = request.get_json()
+            username = data.get("username")
+            password = data.get("password")
+            if not username or not password:
+                return jsonify({"error": "Missing name or password"}), 406
+            try:
+                self.db_communication.verify_user(username, password)
+            except Exception as e:
+                return jsonify({"error": f"An error has occuerd: {e}"}), 400
+            return jsonify({"success": "Successfuly verified", "username": f"{username}", "token": f"{password}"})
         
         
         
 if __name__ == '__main__':
     s = server()
     s.app.run(debug=True)
+#Test message
