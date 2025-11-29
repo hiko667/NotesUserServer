@@ -58,7 +58,16 @@ class database_access():
             return True
         else:
             return False
-        
+    def get_user_id(self, username)->int:
+        self.messenger.execute("SELECT id FROM users WHERE username = ?", (username, ))
+        return int(self.messenger.fetchone()[0])
+    def verify_access(self, username, token)->bool:
+        if not username or not token:
+            raise databaseException("One of the following was not given: username, token", 400)
+        elif not self.user_exists(username):
+            raise databaseException(f"Can not find user: {username}", 404)
+        elif not self.verify_token(username, token):
+            raise databaseException("Wrong or damaged token", 401)
     #user handling
     def new_user(self, username, password)->response:
         try:
@@ -147,14 +156,10 @@ class database_access():
             elif not self.verify_token(username, token):
                 raise databaseException("Wrong or damaged token", 401)
             else: 
-             
-                self.messenger.execute("SELECT id FROM users WHERE username = ?", (username, ))
-                user_id = self.messenger.fetchone()[0]
-               
+                user_id = self.get_user_id(username)
                 self.messenger.execute("SELECT note_id FROM notes ORDER BY rowid DESC LIMIT 1")
                 temp = self.messenger.fetchone()
                 new_id = int(temp[0]) + 1 if temp[0] is not None else 0
-                print("lil najdżer")
                 self.messenger.execute("INSERT INTO notes (note_id, user_id, title, tags, category, content) VALUES (?, ?, ?, ?, ?, ?)", (new_id, user_id, newnote.title, newnote.tagsToString(), newnote.category, newnote.content))
                 self.connection.commit()
                 return response(True, 201, "Note created successfully", None)
@@ -162,8 +167,31 @@ class database_access():
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
-    def get_notes(self, user_id)->response:
-        pass
+    def get_notes(self, username, token)->response:
+        try:
+            if not username or not token:
+                raise databaseException("One of the following was not given: username, token", 400)
+            elif not self.user_exists(username):
+                raise databaseException(f"Can not find user: {username}", 404)
+            elif not self.verify_token(username, token):
+                raise databaseException("Wrong or damaged token", 401)
+            user_id = self.get_user_id(username)
+            self.messenger.execute("SELECT * FROM notes WHERE user_id = ?", (user_id, ))
+            notes = self.messenger.fetchall()
+            notes_package = [
+                {
+                    "title" : n[2],
+                     "tags": n[3].split(";") if n[3] else [],
+                    "category": n[4],
+                    "content": n[5]
+                }
+                for n in notes
+            ]
+            return response(True, 200, "Fetched notessuccesfully", notes_package)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)
     def update_note(self, note)->response:
         pass
     def delete_note(self, note_id)->response:
@@ -222,9 +250,12 @@ class service_proxy():
             content = data.get("content")
             rez = self.db_access.new_note(username, token, note(title, tags, category, content))
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
-        @self.app.route('/api/notes/delete', methods = ['DELETE'])
-        def delete_note():
-            pass
+        @self.app.route('/api/notes/get', methods = ['POST'])
+        def get_notes():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            rez = self.db_access.get_notes(username, token)
         
 if __name__ == '__main__':
     service = service_proxy()
