@@ -46,7 +46,17 @@ A simple api server for our remote notes app project
 #### Update User
 
 ```http
-  GET /api/user/verify_login
+  PATCH /api/user/update
+```
+
+| Parameters | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `username`      | `string` | **Required**. username for which to change password |
+| `token`      | `string` | **Required**. token to verify user (obteined during logging in)|
+| `new_password`      | `string` | **Required**. new password|
+
+```http
+  DELETE /api/user/delete
 ```
 
 | Parameters | Type     | Description                       |
