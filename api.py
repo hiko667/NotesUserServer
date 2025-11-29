@@ -222,10 +222,10 @@ class service_proxy():
             content = data.get("content")
             rez = self.db_access.new_note(username, token, note(title, tags, category, content))
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
-        
-        
+        @self.app.route('/api/notes/delete', methods = ['DELETE'])
+        def delete_note():
+            pass
         
 if __name__ == '__main__':
     service = service_proxy()
     service.app.run(debug=True)
-#Test message
