@@ -58,12 +58,12 @@ A simple api server for our remote notes app project
 ```http
   DELETE /api/user/delete
 ```
-
+#### Delete User
 | Parameters | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
-| `username`      | `string` | **Required**. username for which to change password |
-| `token`      | `string` | **Required**. token to verify user (obteined during logging in)|
-| `new_password`      | `string` | **Required**. new password|
+| `username`      | `string` | **Required**. username for account to be deleted |
+| `password`      | `string` | **Required**. password for account to be deleted|
+| `token`      | `string` | **Required**. token to verify with one fetched from database, based on given username and password|
 
 
 
