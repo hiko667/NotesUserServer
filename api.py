@@ -36,7 +36,7 @@ class database_access():
                                token TEXT NOT NULL);""")
         self.messenger.execute("""
                                CREATE TABLE IF NOT EXISTS notes(
-                               note_id TEXT PRIMARY KEY, 
+                               note_id INTEGER PRIMARY KEY, 
                                user_id INTEGER, 
                                title TEXT,
                                tags TEXT, 
@@ -50,7 +50,9 @@ class database_access():
     def verify_token(self, username, token)->bool: 
         self.messenger.execute("SELECT token FROM users WHERE username=?", (username,))
         res = self.messenger.fetchone()
-        return (token == res[0])
+        return False if res == None else bool(token == res[0])
+        
+
         
     def user_exists(self, username)->bool:
         self.messenger.execute("SELECT COUNT (*) FROM users WHERE username = ?", (username, ))
@@ -58,16 +60,19 @@ class database_access():
             return True
         else:
             return False
+        
     def get_user_id(self, username)->int:
         self.messenger.execute("SELECT id FROM users WHERE username = ?", (username, ))
         return int(self.messenger.fetchone()[0])
-    def verify_access(self, username, token)->bool:
+    
+    def verify_access(self, username, token):
         if not username or not token:
             raise databaseException("One of the following was not given: username, token", 400)
         elif not self.user_exists(username):
             raise databaseException(f"Can not find user: {username}", 404)
         elif not self.verify_token(username, token):
             raise databaseException("Wrong or damaged token", 401)
+        
     #user handling
     def new_user(self, username, password)->response:
         try:
@@ -111,14 +116,10 @@ class database_access():
 
     def update_password(self, username, token, new_password)->response:
         try:
-            if not username or not new_password:
-                raise databaseException("One of the following was not given: username, new_password, token", 400)
-            if self.verify_token(username, token):
-                self.messenger.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username, ))
-                self.connection.commit()
-                return response(True, 202, "Password updated", None)
-            else:
-                raise databaseException("Wrong or damaged token", 401)
+            self.verify_access(username, token)
+            self.messenger.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username, ))
+            self.connection.commit()
+            return response(True, 202, "Password updated", None)
         except databaseException as e:
             return response(False, e.code, e.content, None)
         except Exception as e:
@@ -149,32 +150,21 @@ class database_access():
     #note handling
     def new_note(self, username, token, newnote : note)->response:
         try:
-            if not username or not token or not newnote.title or not newnote.content:
-                raise databaseException("One of the following was not given: username, token, note title, note content", 400)
-            elif not self.user_exists(username):
-                raise databaseException(f"Can not find user: {username}", 404)
-            elif not self.verify_token(username, token):
-                raise databaseException("Wrong or damaged token", 401)
-            else: 
-                user_id = self.get_user_id(username)
-                self.messenger.execute("SELECT note_id FROM notes ORDER BY rowid DESC LIMIT 1")
-                temp = self.messenger.fetchone()
-                new_id = int(temp[0]) + 1 if temp[0] is not None else 0
-                self.messenger.execute("INSERT INTO notes (note_id, user_id, title, tags, category, content) VALUES (?, ?, ?, ?, ?, ?)", (new_id, user_id, newnote.title, newnote.tagsToString(), newnote.category, newnote.content))
-                self.connection.commit()
-                return response(True, 201, "Note created successfully", None)
+            self.verify_access(username, token)
+            user_id = self.get_user_id(username)
+            self.messenger.execute("SELECT note_id FROM notes ORDER BY rowid DESC LIMIT 1")
+            temp = self.messenger.fetchone()
+            new_id = int(temp[0]) + 1 if temp[0] is not None else 0
+            self.messenger.execute("INSERT INTO notes (note_id, user_id, title, tags, category, content) VALUES (?, ?, ?, ?, ?, ?)", (new_id, user_id, newnote.title, newnote.tagsToString(), newnote.category, newnote.content))
+            self.connection.commit()
+            return response(True, 201, "Note created successfully", None)
         except databaseException as e:
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
     def get_notes(self, username, token)->response:
         try:
-            if not username or not token:
-                raise databaseException("One of the following was not given: username, token", 400)
-            elif not self.user_exists(username):
-                raise databaseException(f"Can not find user: {username}", 404)
-            elif not self.verify_token(username, token):
-                raise databaseException("Wrong or damaged token", 401)
+            self.verify_access(username, token)
             user_id = self.get_user_id(username)
             self.messenger.execute("SELECT * FROM notes WHERE user_id = ?", (user_id, ))
             notes = self.messenger.fetchall()
