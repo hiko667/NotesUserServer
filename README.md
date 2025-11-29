@@ -84,4 +84,25 @@ at [Bialystok University Of Technology](https://pb.edu.pl/)
 | `category` | `string` | **Required** notes category. If there is no cathegory, send 'No Category' |
 | `content` | `string` | **Required**. content of the note |
 
+#### Fetch Notes and Tasks
 
+```http
+  POST /api/notes/fetch
+```
+
+| Parameters | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `username`      | `string` | **Required**. username for which to fetch notes and tasks |
+| `token`      | `string` | **Required**. token to verify user (obteined during logging in)|
+
+#### Delete Note
+
+```http
+  DELETE /api/notes/delete
+```
+
+| Parameters | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `username`      | `string` | **Required**. username of account. Used to verify user |
+| `token`      | `string` | **Required**. token to verify user (obteined during logging in)|
+| `note_id`      | `int` | **Required**. id of note to be deleted. Obtained during fetching process |

@@ -24,7 +24,12 @@ class note():
         if self.tags == None:
             return ""
         return ";".join(self.tags)
-    
+class taks(note):
+    def __init__(self, title, tags, category, content, priority, deadline):
+        super().__init__(title, tags, category, content)
+        self.deadline = deadline
+        self.priority = priority
+
 class database_access():
     def __init__(self, database_name):
         self.connection = sqlite3.connect(database_name, check_same_thread=False)
@@ -42,6 +47,18 @@ class database_access():
                                tags TEXT, 
                                category TEXT, 
                                content TEXT, 
+                               FOREIGN KEY(user_id) 
+                               REFERENCES users(id));""")
+        self.messenger.execute("""
+                               CREATE TABLE IF NOT EXISTS tasks(
+                               task_id INTEGER PRIMARY KEY, 
+                               user_id INTEGER, 
+                               title TEXT,
+                               tags TEXT, 
+                               category TEXT, 
+                               content TEXT, 
+                               priority TEXT,
+                               deadline TEXT,
                                FOREIGN KEY(user_id) 
                                REFERENCES users(id));""")
         self.connection.commit()
@@ -78,7 +95,8 @@ class database_access():
                 raise databaseException(f"User {username} already exists", 400)
             self.messenger.execute("SELECT id FROM users ORDER BY rowid DESC LIMIT 1")
             temp = self.messenger.fetchone()
-            new_id = int(temp[0]) + 1 if temp[0] is not None else 0
+            new_id =  0 if temp is None else int(temp[0]) + 1 
+            print("alan")
             new_token = str(int(time.time()*10000)) + username
             # print(new_id, new_token, username, password)
             self.messenger.execute(f"SELECT id FROM users WHERE id = {new_id}")
@@ -130,10 +148,10 @@ class database_access():
             if res.status == "error":
                 return res
             elif res.data_bundle["token"] == token:
-                self.messenger.execute("SELECT id FROM users WHERE username = ?", (username, ))
-                id = self.messenger.fetchone()[0]
+                id = self.get_user_id(username)
                 self.messenger.execute("DELETE FROM users WHERE username = ?", (username, ))
                 self.messenger.execute("DELETE FROM notes WHERE user_id = ?", (id, ))
+                self.messenger.execute("DELETE FROM tasks WHERE user_id = ?", (id, ))
                 self.connection.commit()
                 return response(True, 202, "Account deleted", None)
             else:
@@ -142,7 +160,51 @@ class database_access():
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandleda error: {e}", None)
-            
+        
+    ##the fetch function
+    def fetch_content(self, username, token)->response:
+        try:
+            self.verify_access(username, token)
+            user_id = self.get_user_id(username)
+            self.messenger.execute("SELECT * FROM notes WHERE user_id = ?", (user_id, ))
+            notes = self.messenger.fetchall()
+            if notes is not None:
+                notes_package = [
+                    {
+                        "note_id": n[0],
+                        "title" : n[2],
+                        "tags": n[3].split(";") if n[3] else [],
+                        "category": n[4],
+                        "content": n[5]
+                    }
+                    for n in notes
+                ]
+            else: 
+                notes_package = None
+            self.messenger.execute("SELECT * FROM tasks WHERE user_id = ?", (user_id, ))
+            tasks = self.messenger.fetchall()
+            if tasks is not None:
+                tasks_package = [
+                    {
+                        "task_id" : t[0],
+                        "title" : t[2],
+                        "tags": t[3].split(";") if t[3] else [],
+                        "category": t[4],
+                        "content": t[5],
+                        "priority": t[6],
+                        "deadline": t[7]
+                    }
+                    for t in tasks
+                ]
+            else:
+                tasks_package = None
+            res = {"notes" : notes_package, "tasks" : tasks_package}
+            return response(True, 200, "Fetched notes and tasks succesfully", res)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)
+        
     #note handling
     def new_note(self, username, token, newnote : note)->response:
         try:
@@ -150,7 +212,7 @@ class database_access():
             user_id = self.get_user_id(username)
             self.messenger.execute("SELECT note_id FROM notes ORDER BY rowid DESC LIMIT 1")
             temp = self.messenger.fetchone()
-            new_id = int(temp[0]) + 1 if temp[0] is not None else 0
+            new_id =  0 if temp is None else int(temp[0]) + 1
             self.messenger.execute("INSERT INTO notes (note_id, user_id, title, tags, category, content) VALUES (?, ?, ?, ?, ?, ?)", (new_id, user_id, newnote.title, newnote.tagsToString(), newnote.category, newnote.content))
             self.connection.commit()
             return response(True, 201, "Note created successfully", None)
@@ -158,31 +220,21 @@ class database_access():
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
-    def get_notes(self, username, token)->response:
+    
+    def update_note(self, username, token, note)->response:
+        pass
+    def delete_note(self, username, token, note_id)->response:
         try:
             self.verify_access(username, token)
-            user_id = self.get_user_id(username)
-            self.messenger.execute("SELECT * FROM notes WHERE user_id = ?", (user_id, ))
-            notes = self.messenger.fetchall()
-            notes_package = [
-                {
-                    "title" : n[2],
-                     "tags": n[3].split(";") if n[3] else [],
-                    "category": n[4],
-                    "content": n[5]
-                }
-                for n in notes
-            ]
-            return response(True, 200, "Fetched notessuccesfully", notes_package)
+            self.messenger.execute("DELETE FROM notes WHERE note_id = ?", (note_id, ))
+            self.connection.commit()
+            return response(True, 202, "Deleted successfully", None)
         except databaseException as e:
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
-    def update_note(self, note)->response:
-        pass
-    def delete_note(self, note_id)->response:
-        pass
-
+    ##tasks handling
+    
 class service_proxy():
     def __init__(self):
         ##boilerplate
@@ -236,12 +288,22 @@ class service_proxy():
             content = data.get("content")
             rez = self.db_access.new_note(username, token, note(title, tags, category, content))
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
-        @self.app.route('/api/notes/get', methods = ['POST'])
-        def get_notes():
+        @self.app.route('/api/notes/fetch', methods = ['POST'])
+        def fetch_content():
             data = request.get_json()
             username = data.get("username")
             token = data.get("token")
-            rez = self.db_access.get_notes(username, token)
+            rez = self.db_access.fetch_content(username, token)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        @self.app.route('/api/notes/delete', methods = ['DELETE'])
+        def delete_note():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            note_id = data.get("note_id")
+            rez = self.db_access.delete_note(username, token, note_id)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+
         
 if __name__ == '__main__':
     service = service_proxy()
