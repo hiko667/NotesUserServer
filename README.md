@@ -25,7 +25,7 @@ A simple api server for our remote notes app project
 #### Verify User
 
 ```http
-  GET /api/user/verify_login
+  POST /api/user/verify_login
 ```
 
 | Parameters | Type     | Description                       |
@@ -65,6 +65,19 @@ A simple api server for our remote notes app project
 | `password`      | `string` | **Required**. password for account to be deleted|
 | `token`      | `string` | **Required**. token to verify with one fetched from database, based on given username and password|
 
+#### New Note
 
+```http
+  POST /api/notes/new
+```
+
+| Parameters | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `username` | `string` | **Required**. username for account |
+| `token` | `string` | **Required**. token for account |
+| `title` | `string` | **Required**. notes title |
+| `tags` | `list` | notes tags |
+| `category` | `string` | **Required** notes category. If there is no cathegory, send 'No Category' |
+| `content` | `string` | **Required**. content of the note |
 
 
