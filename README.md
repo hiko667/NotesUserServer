@@ -13,9 +13,21 @@ at [Bialystok University Of Technology](https://pb.edu.pl/)
 - [@Marchewer](https://github.com/Marchewer)
 
 
+## Python Packages Required
+
+To run this project, you need to have following python packages installed on your machine
+
+`flask`
+
+`sqlite3`
+
+'time'
+
+
 ## API Reference
 
 #### New User
+
 
 ```http
   POST /api/user/new
