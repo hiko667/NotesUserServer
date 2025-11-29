@@ -37,14 +37,10 @@ class database_access():
     #funckje użytkowe
     def verify_token(self, username, token)->bool: 
         self.messenger.execute("SELECT token FROM users WHERE username=?", (username,))
-        response = self.messenger.fetchone()
-        if response == None:
-            return False
-        else:
-            if response[0] == token:
-                return True
-            else:
-                return False
+        res = self.messenger.fetchone()
+        print (token)
+        print (res[0])
+        return (token == res[0])
         
     def user_exists(self, username)->bool:
         self.messenger.execute("SELECT COUNT (*) FROM users WHERE username = ?", (username, ))
@@ -57,7 +53,7 @@ class database_access():
     def new_user(self, username, password)->response:
         try:
             if not username or not password:
-                raise databaseException("No username or password", 400)
+                raise databaseException("One of the following was not given: username, password", 400)
             if self.user_exists(username):
                 raise databaseException(f"User {username} already exists", 400)
             self.messenger.execute("SELECT COUNT(*) FROM users")
@@ -77,6 +73,8 @@ class database_access():
       
     def verify_user(self, username, password)->response:
         try: 
+            if not username or not password:
+                raise databaseException("One of the following was not given: username, password", 400)
             self.messenger.execute("SELECT username, password, token FROM users WHERE username = ?", (username,))
             res = self.messenger.fetchone()
             if res == None:
@@ -91,10 +89,20 @@ class database_access():
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
 
-    def update_password(self, username, token, new_password):
-        self.verify_token(username, token)
-        self.messenger.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username, ))
-        self.connection.commit()
+    def update_password(self, username, token, new_password)->response:
+        try:
+            if not username or not new_password:
+                raise databaseException("One of the following was not given: username, new_password, token", 400)
+            if self.verify_token(username, token):
+                self.messenger.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username, ))
+                self.connection.commit()
+                return response(True, 202, "Password updated", None)
+            else:
+                raise databaseException("Wrong or damaged token", 401)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)
     def delete_user(self, username, token):
         pass
     #note handling
@@ -111,7 +119,6 @@ class service_proxy():
         self.app = Flask(__name__)
         
 
-        
         @self.app.route('/')
         def home():
             return "<h1>You should not be here</h1>"
@@ -130,24 +137,19 @@ class service_proxy():
             password = data.get("password")
             rez = self.db_access.verify_user(username, password)
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
-            # if not username or not password:
-            #     return jsonify({"error": "Missing name or password"}), 406
-            # try:
-            #     response = self.db_access.verify_user(username, password)
-            # except Exception as e:
-            #     return jsonify({"error": f"An error has occuerd: {e}"}), 400
-            # return jsonify({"success": "Successfuly verified", "username": f"{username}", "token": f"{response}"})
         @self.app.route('/api/user/update', methods = ['PATCH'])
         def update_password():
             data = request.get_json()
             username = data.get("username")
             new_password = data.get("new_password")
             token = data.get("token")
-            try:   
-                self.db_access.update_password(username, token, new_password)
-            except Exception as e:
-                return jsonify({"error": f"An error has occured: {e}"}), 400
-            return jsonify({"success": f"Successfuly updated password for user: {username}"}), 202
+            rez = self.db_access.update_password(username, token, new_password)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+            # try:   
+            #     self.db_access.update_password(username, token, new_password)
+            # except Exception as e:
+            #     return jsonify({"error": f"An error has occured: {e}"}), 400
+            # return jsonify({"success": f"Successfuly updated password for user: {username}"}), 202
         
         
         
