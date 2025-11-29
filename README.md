@@ -33,13 +33,15 @@ A simple api server for our remote notes app project
 | `username`      | `string` | **Required**. username to log in |
 | `password`      | `string` | **Required**. password to log in |
 
-##### Returns:
+##### Returns
 
 
 | Parameters | Type     | Description                       |
 | :-------- | :------- | :-------------------------------- |
-| `username`      | `string` | accounts Username |
-| `token`      | `string` | accounts token |
+| `status`      | `string` | "success" or "error" |
+| `message`      | `string` | message describing a reason for status |
+| `data : username`      | `string` | accounts username |
+| `data : token`      | `string` | accounts token |
 
 #### Update User
 

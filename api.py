@@ -35,22 +35,24 @@ class database_access():
         self.connection.commit()
         #baza danych innit
     #funckje użytkowe
-    def verify_user(self, username, password):
-        self.messenger.execute("SELECT username, password, token FROM users WHERE username = ?", (username,))
+    def verify_token(self, username, token)->bool: 
+        self.messenger.execute("SELECT token FROM users WHERE username=?", (username,))
         response = self.messenger.fetchone()
         if response == None:
-            raise Exception(f"No account for {username}")
+            return False
         else:
-            if password == response[1]:
-                return response[2]
+            if response[0] == token:
+                return True
             else:
-                raise Exception(f"Wrong password")
+                return False
+        
     def user_exists(self, username)->bool:
         self.messenger.execute("SELECT COUNT (*) FROM users WHERE username = ?", (username, ))
         if self.messenger.fetchone()[0] == 1:
             return True
         else:
             return False
+        
     #user handling
     def new_user(self, username, password)->response:
         try:
@@ -66,22 +68,29 @@ class database_access():
             if self.messenger.fetchone() == None:
                 self.messenger.execute(f"INSERT INTO users (id, username, password, token) VALUES (?, ?, ?, ?)", (new_id, username, password, new_token))
             self.connection.commit()
-            return response(True, 200, "Account created successfully", None)
+            return response(True, 201, "Account created successfully", None)
         except databaseException as e:
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
     
-    def verify_token(self, username, token)->bool: 
-        self.messenger.execute("SELECT token FROM users WHERE username=?", (username,))
-        response = self.messenger.fetchone()
-        if response == None:
-            raise Exception(f"Failed to verify user {username}: no such user")
-        else:
-            if response[0] == token:
-                return True
+      
+    def verify_user(self, username, password)->response:
+        try: 
+            self.messenger.execute("SELECT username, password, token FROM users WHERE username = ?", (username,))
+            res = self.messenger.fetchone()
+            if res == None:
+                raise databaseException(f"Can not find user: {username}", 400)
             else:
-                raise Exception(f"Failed to verify user {username}: wrong or damaged token")
+                if password == res[1]:
+                    return response(True, 200, "Correct password", {"username": username, "token": res[2]})
+                else:
+                    raise databaseException("Wrong password", 401)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)
+
     def update_password(self, username, token, new_password):
         self.verify_token(username, token)
         self.messenger.execute("UPDATE users SET password = ? WHERE username = ?", (new_password, username, ))
@@ -119,13 +128,15 @@ class service_proxy():
             data = request.get_json()
             username = data.get("username")
             password = data.get("password")
-            if not username or not password:
-                return jsonify({"error": "Missing name or password"}), 406
-            try:
-                response = self.db_access.verify_user(username, password)
-            except Exception as e:
-                return jsonify({"error": f"An error has occuerd: {e}"}), 400
-            return jsonify({"success": "Successfuly verified", "username": f"{username}", "token": f"{response}"})
+            rez = self.db_access.verify_user(username, password)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+            # if not username or not password:
+            #     return jsonify({"error": "Missing name or password"}), 406
+            # try:
+            #     response = self.db_access.verify_user(username, password)
+            # except Exception as e:
+            #     return jsonify({"error": f"An error has occuerd: {e}"}), 400
+            # return jsonify({"success": "Successfuly verified", "username": f"{username}", "token": f"{response}"})
         @self.app.route('/api/user/update', methods = ['PATCH'])
         def update_password():
             data = request.get_json()
