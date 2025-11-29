@@ -3,10 +3,14 @@
 
 A simple api server for our remote notes app project
 
+at [Bialystok University Of Technology](https://pb.edu.pl/)
+
 
 ## Authors
 
 - [@hiko667](https://github.com/hiko667)
+- [@Fern-KK](https://github.com/Fern-KK)
+- [@Marchewer](https://github.com/Marchewer)
 
 
 ## API Reference

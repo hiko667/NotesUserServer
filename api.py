@@ -52,14 +52,10 @@ class database_access():
         res = self.messenger.fetchone()
         return False if res == None else bool(token == res[0])
         
-
-        
     def user_exists(self, username)->bool:
         self.messenger.execute("SELECT COUNT (*) FROM users WHERE username = ?", (username, ))
-        if self.messenger.fetchone()[0] == 1:
-            return True
-        else:
-            return False
+        res = self.messenger.fetchone()
+        return False if res == None else bool(res[0] == 1)
         
     def get_user_id(self, username)->int:
         self.messenger.execute("SELECT id FROM users WHERE username = ?", (username, ))
