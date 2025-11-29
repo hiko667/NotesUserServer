@@ -95,6 +95,16 @@ at [Bialystok University Of Technology](https://pb.edu.pl/)
 | `username`      | `string` | **Required**. username for which to fetch notes and tasks |
 | `token`      | `string` | **Required**. token to verify user (obteined during logging in)|
 
+##### Returns
+
+
+| Parameters | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `status`      | `string` | "success" or "error" |
+| `message`      | `string` | message describing a reason for status |
+| `data : notes`      | `list` | list of notes. Each note is a dictionary. Contains: category, content, tags[], title, note_id |
+| `data : tasks`      | `list` | list of tasks. Each task is a dictionary. Contains: category, content, tags[], title, task_id, deadline, priority|
+
 #### Delete Note
 
 ```http
