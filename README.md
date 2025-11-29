@@ -21,7 +21,7 @@ To run this project, you need to have following python packages installed on you
 
 `sqlite3`
 
-'time'
+`time`
 
 
 ## API Reference
