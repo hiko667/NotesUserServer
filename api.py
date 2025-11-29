@@ -56,8 +56,8 @@ class database_access():
                 raise databaseException("One of the following was not given: username, password", 400)
             if self.user_exists(username):
                 raise databaseException(f"User {username} already exists", 400)
-            self.messenger.execute("SELECT COUNT(*) FROM users")
-            new_id = self.messenger.fetchone()[0]
+            self.messenger.execute("SELECT id FROM users ORDER BY rowid DESC LIMIT 1")
+            new_id = int(self.messenger.fetchone()[0]) + 1 if self.messenger.fetchone() is not None else 0
             new_token = str(int(time.time()*10000)) + username
             # print(new_id, new_token, username, password)
             self.messenger.execute(f"SELECT id FROM users WHERE id = {new_id}")
@@ -103,8 +103,30 @@ class database_access():
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
-    def delete_user(self, username, token):
-        pass
+        
+        
+    def delete_user(self, username, password, token)->response:
+        try:
+            if not username or not password or not token:
+                raise databaseException("One of the following was not given: username, password, token", 400)
+            res = self.verify_user(username, password)
+            if res.status == "error":
+                return res
+            elif res.data_bundle["token"] == token:
+                self.messenger.execute("SELECT id FROM users WHERE username = ?", (username, ))
+                id = self.messenger.fetchone()[0]
+                self.messenger.execute("DELETE FROM users WHERE username = ?", (username, ))
+                self.messenger.execute("DELETE FROM notes WHERE user_id = ?", (id, ))
+                self.connection.commit()
+                return response(True, 202, "Account deleted", None)
+            else:
+                raise databaseException("Wrong or damaged token", 401)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandleda error: {e}", None)
+            
+
     #note handling
     def get_notes(self, user_id):
         pass
@@ -145,11 +167,14 @@ class service_proxy():
             token = data.get("token")
             rez = self.db_access.update_password(username, token, new_password)
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
-            # try:   
-            #     self.db_access.update_password(username, token, new_password)
-            # except Exception as e:
-            #     return jsonify({"error": f"An error has occured: {e}"}), 400
-            # return jsonify({"success": f"Successfuly updated password for user: {username}"}), 202
+        @self.app.route('/api/user/delete', methods = ['DELETE'])
+        def delete_user():
+            data = request.get_json()
+            username = data.get("username")
+            password = data.get("password")
+            token = data.get("token")
+            rez = self.db_access.delete_user(username, password, token)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
         
         
         
