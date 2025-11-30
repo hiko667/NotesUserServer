@@ -24,6 +24,15 @@ To run this project, you need to have following python packages installed on you
 `time`
 
 
+## Deployment
+
+To deploy this project run
+
+```bash
+  git innit
+  git clone https://github.com/hiko667/NotesUserServer
+  python.exe api.py
+```
 ## API Reference
 
 #### New User
@@ -115,8 +124,8 @@ To run this project, you need to have following python packages installed on you
 | `token` | `string` | **Required**. token for account |
 | `title` | `string` | **Required**. notes title |
 | `tags` | `list` | notes tags |
-| `category` | `string` | **Required** notes category. If there is no cathegory, send 'No Category' |
-| `content` | `string` | **Required**. content of the note |
+| `category` | `string` |  notes category |
+| `content` | `string` |  content of the note |
 
 #### Delete Note
 
@@ -142,7 +151,7 @@ To run this project, you need to have following python packages installed on you
 | `token` | `string` | **Required**. token for account |
 | `title` | `string` | **Required**. notes title |
 | `tags` | `list` | notes tags |
-| `category` | `string` | **Required** notes category. If there is no cathegory, send 'No Category' |
+| `category` | `string` | notes category |
 | `content` | `string` | **Required**. content of the note |
 | `note_id`      | `int` | **Required**. id of note to be updated. Obtained during fetching process |
 
@@ -158,10 +167,10 @@ To run this project, you need to have following python packages installed on you
 | `token` | `string` | **Required**. token for account |
 | `title` | `string` | **Required**. tasks title |
 | `tags` | `list` | tasks tags |
-| `category` | `string` | **Required** tasks category. If there is no cathegory, send 'No Category' |
+| `category` | `string` |  tasks category |
 | `content` | `string` | **Required**. content of the task |
-| `priority` | `string` | **Required**. priority of the task. If there is none send 'No Priority' |
-| `deadline` | `string` | **Required**. deadline of the task. If there is none send 'No Deadline' |
+| `priority` | `string` |  priority of the task |
+| `deadline` | `string` |  deadline of the task |
 
 #### Delete Task
 
@@ -187,8 +196,8 @@ To run this project, you need to have following python packages installed on you
 | `token` | `string` | **Required**. token for account |
 | `title` | `string` | **Required**. tasks title |
 | `tags` | `list` | tasks tags |
-| `category` | `string` | **Required** tasks category. If there is no cathegory, send 'No Category' |
+| `category` | `string` |  tasks category. |
 | `content` | `string` | **Required**. content of the task |
-| `priority` | `string` | **Required**. priority of the task. If there is none send 'No Priority' |
-| `deadline` | `string` | **Required**. deadline of the task. If there is none send 'No Deadline' |
+| `priority` | `string` |  priority of the task.  |
+| `deadline` | `string` |  deadline of the task.  |
 | `task_id`      | `int` | **Required**. id of task to be updated. Obtained during fetching process |
