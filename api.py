@@ -22,7 +22,7 @@ class note():
         self.content = content
     def tagsToString(self):
         if self.tags == None:
-            return ""
+            return None
         return ";".join(self.tags)
 class task(note):
     def __init__(self, title, tags, category, content, priority, deadline):
@@ -332,8 +332,8 @@ class service_proxy():
             username = data.get("username")
             token = data.get("token")
             title  = data.get("title")
-            tags = data.get("tags")
-            category = data.get("category")
+            tags = (v := data.get("tags")) if v and v.strip() else None
+            category = (v := data.get("category")) if v and v.strip() else None
             content = data.get("content")
             rez = self.db_access.new_note(username, token, note(title, tags, category, content))
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
@@ -352,8 +352,8 @@ class service_proxy():
             username = data.get("username")
             token = data.get("token")
             title  = data.get("title")
-            tags = data.get("tags")
-            category = data.get("category")
+            tags = (v := data.get("tags")) if v and v.strip() else None
+            category = (v := data.get("category")) if v and v.strip() else None
             content = data.get("content")
             note_id = data.get("note_id")
             rez = self.db_access.update_note(username, token, note(title, tags, category, content), note_id)
@@ -365,11 +365,11 @@ class service_proxy():
             username = data.get("username")
             token = data.get("token")
             title  = data.get("title")
-            tags = data.get("tags")
-            category = data.get("category")
-            content = data.get("content")
-            priority = data.get("priority")
-            deadline = data.get("deadline")
+            tags = (v := data.get("tags")) if v and v.strip() else None
+            category = (v := data.get("category")) if v and v.strip() else None
+            content = data.get("content") 
+            priority = (v := data.get("priority")) if v and v.strip() else None
+            deadline = (v := data.get("deadline")) if v and v.strip() else None
             rez = self.db_access.new_task(username, token, task(title, tags, category, content, priority, deadline))
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
         @self.app.route('/api/tasks/delete', methods = ['DELETE'])
@@ -386,11 +386,11 @@ class service_proxy():
             username = data.get("username")
             token = data.get("token")
             title  = data.get("title")
-            tags = data.get("tags")
-            category = data.get("category")
+            tags = (v := data.get("tags")) if v and v.strip() else None
+            category = (v := data.get("category")) if v and v.strip() else None
             content = data.get("content")
-            priority = data.get("priority")
-            deadline = data.get("deadline")
+            priority = (v := data.get("priority")) if v and v.strip() else None
+            deadline = (v := data.get("deadline")) if v and v.strip() else None
             task_id = data.get("task_id")
             rez = self.db_access.update_task(username, token, task(title, tags, category, content, priority, deadline), task_id)   
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
