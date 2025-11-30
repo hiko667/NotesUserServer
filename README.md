@@ -81,20 +81,6 @@ To run this project, you need to have following python packages installed on you
 | `password`      | `string` | **Required**. password for account to be deleted|
 | `token`      | `string` | **Required**. token to verify with one fetched from database, based on given username and password|
 
-#### New Note
-
-```http
-  POST /api/notes/new
-```
-
-| Parameters | Type     | Description                |
-| :-------- | :------- | :------------------------- |
-| `username` | `string` | **Required**. username for account |
-| `token` | `string` | **Required**. token for account |
-| `title` | `string` | **Required**. notes title |
-| `tags` | `list` | notes tags |
-| `category` | `string` | **Required** notes category. If there is no cathegory, send 'No Category' |
-| `content` | `string` | **Required**. content of the note |
 
 #### Fetch Notes and Tasks
 
@@ -117,6 +103,21 @@ To run this project, you need to have following python packages installed on you
 | `data : notes`      | `list` | list of notes. Each note is a dictionary. Contains: category, content, tags[], title, note_id |
 | `data : tasks`      | `list` | list of tasks. Each task is a dictionary. Contains: category, content, tags[], title, task_id, deadline, priority|
 
+#### New Note
+
+```http
+  POST /api/notes/new
+```
+
+| Parameters | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `username` | `string` | **Required**. username for account |
+| `token` | `string` | **Required**. token for account |
+| `title` | `string` | **Required**. notes title |
+| `tags` | `list` | notes tags |
+| `category` | `string` | **Required** notes category. If there is no cathegory, send 'No Category' |
+| `content` | `string` | **Required**. content of the note |
+
 #### Delete Note
 
 ```http
@@ -128,3 +129,66 @@ To run this project, you need to have following python packages installed on you
 | `username`      | `string` | **Required**. username of account. Used to verify user |
 | `token`      | `string` | **Required**. token to verify user (obteined during logging in)|
 | `note_id`      | `int` | **Required**. id of note to be deleted. Obtained during fetching process |
+
+#### Update Note
+
+```http
+  PATCH /api/notes/update
+```
+
+| Parameters | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `username` | `string` | **Required**. username for account |
+| `token` | `string` | **Required**. token for account |
+| `title` | `string` | **Required**. notes title |
+| `tags` | `list` | notes tags |
+| `category` | `string` | **Required** notes category. If there is no cathegory, send 'No Category' |
+| `content` | `string` | **Required**. content of the note |
+| `note_id`      | `int` | **Required**. id of note to be updated. Obtained during fetching process |
+
+#### New Task
+
+```http
+  POST /api/tasks/new
+```
+
+| Parameters | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `username` | `string` | **Required**. username for account |
+| `token` | `string` | **Required**. token for account |
+| `title` | `string` | **Required**. tasks title |
+| `tags` | `list` | tasks tags |
+| `category` | `string` | **Required** tasks category. If there is no cathegory, send 'No Category' |
+| `content` | `string` | **Required**. content of the task |
+| `priority` | `string` | **Required**. priority of the task. If there is none send 'No Priority' |
+| `deadline` | `string` | **Required**. deadline of the task. If there is none send 'No Deadline' |
+
+#### Delete Task
+
+```http
+  DELETE /api/tasks/delete
+```
+
+| Parameters | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `username`      | `string` | **Required**. username of account. Used to verify user |
+| `token`      | `string` | **Required**. token to verify user (obteined during logging in)|
+| `task_id`      | `int` | **Required**. id of task to be deleted. Obtained during fetching process |
+
+#### Update Task
+
+```http
+  PATCH /api/tasks/update
+```
+
+| Parameters | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `username` | `string` | **Required**. username for account |
+| `token` | `string` | **Required**. token for account |
+| `title` | `string` | **Required**. tasks title |
+| `tags` | `list` | tasks tags |
+| `category` | `string` | **Required** tasks category. If there is no cathegory, send 'No Category' |
+| `content` | `string` | **Required**. content of the task |
+| `priority` | `string` | **Required**. priority of the task. If there is none send 'No Priority' |
+| `deadline` | `string` | **Required**. deadline of the task. If there is none send 'No Deadline' |
+| `task_id`      | `int` | **Required**. id of task to be updated. Obtained during fetching process |

@@ -99,7 +99,7 @@ class database_access():
             print("alan")
             new_token = str(int(time.time()*10000)) + username
             # print(new_id, new_token, username, password)
-            self.messenger.execute(f"SELECT id FROM users WHERE id = {new_id}")
+            self.messenger.execute("SELECT id FROM users WHERE id = ?", (new_id, ))
             if self.messenger.fetchone() == None:
                 self.messenger.execute(f"INSERT INTO users (id, username, password, token) VALUES (?, ?, ?, ?)", (new_id, username, password, new_token))
             self.connection.commit()
