@@ -215,7 +215,7 @@ class database_access():
             new_id =  0 if temp is None else int(temp[0]) + 1
             self.messenger.execute("INSERT INTO notes (note_id, user_id, title, tags, category, content) VALUES (?, ?, ?, ?, ?, ?)", (new_id, user_id, newnote.title, newnote.tagsToString(), newnote.category, newnote.content))
             self.connection.commit()
-            return response(True, 201, "Note created successfully", None)
+            return response(True, 201, "Note created successfully", new_id)
         except databaseException as e:
             return response(False, e.code, e.content, None)
         except Exception as e:
@@ -224,6 +224,12 @@ class database_access():
     def delete_note(self, username, token, note_id)->response:
         try:
             self.verify_access(username, token)
+            self.messenger.execute("SELECT user_id FROM notes WHERE note_id = ?", (note_id))
+            target_note = self.messenger.fetchone()
+            if target_note == None:
+                raise databaseException("Note by selected id does not exist", 404)
+            if target_note[0] != self.get_user_id(username):
+                raise databaseException("Client error: sent id of note that does not belong to you. Notify server handler", 401)
             self.messenger.execute("DELETE FROM notes WHERE note_id = ?", (note_id, ))
             self.connection.commit()
             return response(True, 202, "Deleted successfully", None)
@@ -234,6 +240,12 @@ class database_access():
     def update_note(self, username, token, newnote : note, note_id)->response:
         try:
             self.verify_access(username, token)
+            self.messenger.execute("SELECT user_id FROM notes WHERE note_id = ?", (note_id))
+            target_note = self.messenger.fetchone()
+            if target_note == None:
+                raise databaseException("Note by selected id does not exist", 404)
+            if target_note[0] != self.get_user_id(username):
+                raise databaseException("Client error: sent id of note that does not belong to you. Notify server handler", 401)
             self.messenger.execute("UPDATE notes SET title = ?, tags = ?, category = ?, content = ? WHERE note_id = ?", (newnote.title, newnote.tagsToString(), newnote.category, newnote.content, note_id) )
             self.connection.commit()
             return response(True, 200, "Note updated successfully", None)
@@ -251,7 +263,7 @@ class database_access():
             new_id =  0 if temp is None else int(temp[0]) + 1
             self.messenger.execute("INSERT INTO tasks (task_id, user_id, title, tags, category, content, priority, deadline) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (new_id, user_id, newtask.title, newtask.tagsToString(), newtask.category, newtask.content, newtask.priority, newtask.deadline))
             self.connection.commit()
-            return response(True, 201, "Task created successfully", None)
+            return response(True, 201, "Task created successfully", new_id)
         except databaseException as e:
             return response(False, e.code, e.content, None)
         except Exception as e:
@@ -259,6 +271,12 @@ class database_access():
     def delete_task(self, username, token, task_id)->response:
         try:
             self.verify_access(username, token)
+            self.messenger.execute("SELECT user_id FROM tasks WHERE note_id = ?", (task_id))
+            target_task = self.messenger.fetchone()
+            if target_task == None:
+                raise databaseException("Note by selected id does not exist", 404)
+            if target_task[0] != self.get_user_id(username):
+                raise databaseException("Client error: sent id of task that does not belong to you. Notify server handler", 401)
             self.messenger.execute("DELETE FROM tasks WHERE task_id = ?", (task_id, ))
             self.connection.commit()
             return response(True, 202, "Deleted successfully", None)
@@ -269,6 +287,12 @@ class database_access():
     def update_task(self, username, token, newtask:task, task_id):
         try:
             self.verify_access(username, token)
+            self.messenger.execute("SELECT user_id FROM tasks WHERE note_id = ?", (task_id))
+            target_task = self.messenger.fetchone()
+            if target_task == None:
+                raise databaseException("Note by selected id does not exist", 404)
+            if target_task[0] != self.get_user_id(username):
+                raise databaseException("Client error: sent id of task that does not belong to you. Notify server handler", 401)
             self.messenger.execute("UPDATE tasks SET title = ?, tags = ?, category = ?, content = ?, priority = ?, deadline = ? WHERE task_id = ?", (newtask.title, newtask.tagsToString(), newtask.category, newtask.content, newtask.priority, newtask.deadline, task_id) )
             self.connection.commit()
             return response(True, 200, "Task updated successfully", None)
