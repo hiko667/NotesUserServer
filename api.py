@@ -24,7 +24,7 @@ class note():
         if self.tags == None:
             return ""
         return ";".join(self.tags)
-class taks(note):
+class task(note):
     def __init__(self, title, tags, category, content, priority, deadline):
         super().__init__(title, tags, category, content)
         self.deadline = deadline
@@ -221,8 +221,6 @@ class database_access():
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
     
-    def update_note(self, username, token, note)->response:
-        pass
     def delete_note(self, username, token, note_id)->response:
         try:
             self.verify_access(username, token)
@@ -233,8 +231,52 @@ class database_access():
             return response(False, e.code, e.content, None)
         except Exception as e:
             return response(False, 400, f"Unhandled error: {e}", None)
+    def update_note(self, username, token, newnote : note, note_id)->response:
+        try:
+            self.verify_access(username, token)
+            self.messenger.execute("UPDATE notes SET title = ?, tags = ?, category = ?, content = ? WHERE note_id = ?", (newnote.title, newnote.tagsToString(), newnote.category, newnote.content, note_id) )
+            self.connection.commit()
+            return response(True, 200, "Note updated successfully", None)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)
     ##tasks handling
-    
+    def new_task(self, username, token, newtask: task)->response:
+        try:
+            self.verify_access(username, token)
+            user_id = self.get_user_id(username)
+            self.messenger.execute("SELECT task_id FROM tasks ORDER BY rowid DESC LIMIT 1")
+            temp = self.messenger.fetchone()
+            new_id =  0 if temp is None else int(temp[0]) + 1
+            self.messenger.execute("INSERT INTO tasks (task_id, user_id, title, tags, category, content, priority, deadline) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (new_id, user_id, newtask.title, newtask.tagsToString(), newtask.category, newtask.content, newtask.priority, newtask.deadline))
+            self.connection.commit()
+            return response(True, 201, "Task created successfully", None)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)
+    def delete_task(self, username, token, task_id)->response:
+        try:
+            self.verify_access(username, token)
+            self.messenger.execute("DELETE FROM tasks WHERE task_id = ?", (task_id, ))
+            self.connection.commit()
+            return response(True, 202, "Deleted successfully", None)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)
+    def update_task(self, username, token, newtask:task, task_id):
+        try:
+            self.verify_access(username, token)
+            self.messenger.execute("UPDATE tasks SET title = ?, tags = ?, category = ?, content = ?, priority = ?, deadline = ? WHERE task_id = ?", (newtask.title, newtask.tagsToString(), newtask.category, newtask.content, newtask.priority, newtask.deadline, task_id) )
+            self.connection.commit()
+            return response(True, 200, "Task updated successfully", None)
+        except databaseException as e:
+            return response(False, e.code, e.content, None)
+        except Exception as e:
+            return response(False, 400, f"Unhandled error: {e}", None)  
+
 class service_proxy():
     def __init__(self):
         ##boilerplate
@@ -275,6 +317,13 @@ class service_proxy():
             token = data.get("token")
             rez = self.db_access.delete_user(username, password, token)
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        @self.app.route('/api/users/fetch', methods = ['POST'])
+        def fetch_content():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            rez = self.db_access.fetch_content(username, token)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
         
         ##notes handling
         @self.app.route('/api/notes/new', methods = ['POST'])
@@ -288,13 +337,7 @@ class service_proxy():
             content = data.get("content")
             rez = self.db_access.new_note(username, token, note(title, tags, category, content))
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
-        @self.app.route('/api/notes/fetch', methods = ['POST'])
-        def fetch_content():
-            data = request.get_json()
-            username = data.get("username")
-            token = data.get("token")
-            rez = self.db_access.fetch_content(username, token)
-            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        
         @self.app.route('/api/notes/delete', methods = ['DELETE'])
         def delete_note():
             data = request.get_json()
@@ -303,8 +346,56 @@ class service_proxy():
             note_id = data.get("note_id")
             rez = self.db_access.delete_note(username, token, note_id)
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        @self.app.route('/api/notes/update', methods = ['PATCH'])
+        def update_note():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            title  = data.get("title")
+            tags = data.get("tags")
+            category = data.get("category")
+            content = data.get("content")
+            note_id = data.get("note_id")
+            rez = self.db_access.update_note(username, token, note(title, tags, category, content), note_id)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        ##tasks handling
+        @self.app.route('/api/tasks/new', methods = ['POST'])
+        def new_task():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            title  = data.get("title")
+            tags = data.get("tags")
+            category = data.get("category")
+            content = data.get("content")
+            priority = data.get("priority")
+            deadline = data.get("deadline")
+            rez = self.db_access.new_task(username, token, task(title, tags, category, content, priority, deadline))
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        @self.app.route('/api/tasks/delete', methods = ['DELETE'])
+        def delete_task():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            task_id = data.get("task_id")
+            rez = self.db_access.delete_task(username, token, task_id)
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        @self.app.route('/api/tasks/update', methods = ['PATCH'])
+        def update_task():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            title  = data.get("title")
+            tags = data.get("tags")
+            category = data.get("category")
+            content = data.get("content")
+            priority = data.get("priority")
+            deadline = data.get("deadline")
+            task_id = data.get("task_id")
+            rez = self.db_access.update_task(username, token, task(title, tags, category, content, priority, deadline), task_id)   
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
 
-        
+
 if __name__ == '__main__':
     service = service_proxy()
     service.app.run(debug=True)
