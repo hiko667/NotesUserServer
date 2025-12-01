@@ -1,4 +1,10 @@
+import sys
+project_home = '/home/logan667/mysite'
+if project_home not in sys.path:
+    sys.path = [project_home] + sys.path
 from main_classes import ServiceProxy
-if __name__ == '__main__':
-    service = ServiceProxy()
-    service.app.run(debug=True)
+service = ServiceProxy()
+##for localhost testing uncomment this:
+application = service.app.run(debug=True)
+##for server (like pythonanywhere) uncomment this:
+application = service.app
