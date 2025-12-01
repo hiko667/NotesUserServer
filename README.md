@@ -33,6 +33,8 @@ To deploy this project run
   git clone https://github.com/hiko667/NotesUserServer
   python.exe api.py
 ```
+It would run at http://localhost:5000/
+or http://your_domain
 ## API Reference
 
 #### New User
