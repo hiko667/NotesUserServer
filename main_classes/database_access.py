@@ -187,7 +187,7 @@ class DatabaseAccess():
             new_id =  0 if temp is None else int(temp[0]) + 1
             self.messenger.execute("INSERT INTO notes (note_id, user_id, title, tags, category, content) VALUES (?, ?, ?, ?, ?, ?)", (new_id, user_id, newnote.title, newnote.tagsToString(), newnote.category, newnote.content))
             self.connection.commit()
-            return Response(True, 201, "Note created successfully", new_id)
+            return Response(True, 201, "Note created successfully", {"id" : new_id})
         except DatabaseException as e:
             return Response(False, e.code, e.content, None)
         except Exception as e:
@@ -235,7 +235,7 @@ class DatabaseAccess():
             new_id =  0 if temp is None else int(temp[0]) + 1
             self.messenger.execute("INSERT INTO tasks (task_id, user_id, title, tags, category, content, priority, deadline) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (new_id, user_id, newtask.title, newtask.tagsToString(), newtask.category, newtask.content, newtask.priority, newtask.deadline))
             self.connection.commit()
-            return Response(True, 201, "Task created successfully", new_id)
+            return Response(True, 201, "Task created successfully", {"id" : new_id})
         except DatabaseException as e:
             return Response(False, e.code, e.content, None)
         except Exception as e:
