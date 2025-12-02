@@ -1,6 +1,7 @@
 import sqlite3
 from utilities import Note, DatabaseException, Response, Task
 from time import time
+
 class DatabaseAccess():
     def __init__(self, database_name):
         self.connection = sqlite3.connect(database_name, check_same_thread=False)
@@ -68,7 +69,7 @@ class DatabaseAccess():
             temp = self.messenger.fetchone()
             new_id =  0 if temp is None else int(temp[0]) + 1 
             print("alan")
-            new_token = str(int(time.time()*10000)) + username
+            new_token = str(int(time()*10000)) + username
             # print(new_id, new_token, username, password)
             self.messenger.execute("SELECT id FROM users WHERE id = ?", (new_id, ))
             if self.messenger.fetchone() == None:
