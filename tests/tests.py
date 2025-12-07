@@ -14,7 +14,7 @@ def new_user(username, password, f):
     except Exception as e:
         f.write(f"Failure. Message: {response_data["message"]}, code: {response.status_code}")
     
-def get_token(username, passwrod, f):
+def get_token(username, passwrod, f)->str:
     try:
         data = {"username": username, "password": passwrod}
         response = requests.post("http://localhost:5000/api/user/verify_login", json=data)
@@ -24,8 +24,12 @@ def get_token(username, passwrod, f):
         else:
             token = response_data["token"]
             f.write(f"Account token returned succesfuly. Message: {response_data["message"]}. Code: {response.status_code}, Token: {token}")
+            return token
     except Exception as e:
             f.write(f"Failure. Message: {response_data["message"]}, code: {response.status_code}")
+            return None
+
+def 
 
 
 
@@ -34,5 +38,7 @@ def test():
     password = "super_secure"
     with open(f"test_raport{str(time)}", "w") as f:
         new_user(username, password, f)
+        token = get_token(username, password)
+        if token == None:
         
 test()

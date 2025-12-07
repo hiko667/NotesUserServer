@@ -7,4 +7,4 @@ service = ServiceProxy()
 ##for localhost testing uncomment this:
 application = service.app.run(debug=True)
 ##for server (like pythonanywhere) uncomment this:
-application = service.app
+# application = service.app
