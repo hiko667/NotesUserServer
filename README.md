@@ -203,3 +203,9 @@ or http://your_domain
 | `priority` | `string` |  priority of the task.  |
 | `deadline` | `string` |  deadline of the task.  |
 | `task_id`      | `int` | **Required**. id of task to be updated. Obtained during fetching process |
+
+
+## Documentation
+
+[UML](//www.plantuml.com/plantuml/png/fLLDRzGm4BtxLrZbG8l8IeXRXL0H7qT0j3T0bcFFPaqTsxKdRQFI_qucU2Eyn5KHbzrutfituvd9v2oXZ3ZqbZ5bPKhy7EArKV0v-jlnZZtXxoJALYPuenHCi6w5d9ycQ3ivN6u-q2-N8J1sdpLA7r99LzOWlDoyzSw1GkCTLylZd_WGau-yXvJ0TH1PmuKmpXaKuZXXv3fB2oTxE9dWrdlBho6QxIZGNuARQKE2I8pdd4wpVI4J9k3M92oeX1k7l0CKCyNeGpp7oHLuAD0NIC6x1Dp1pQosGWuofHiVTS7F4Vx5PGXQ8eWzLalhzoFbiwgYmG923bnNgEIm1LGxeRn3SFZemZYFK0_sqUDC8zPQgWzxKok98SngjHuVkYv5Ly1f-Eiw5nDAD6AjNU5XRufBZCeL7X_wGEgUVMf_W49wQUzOaz_ZHNxdUpW-AUpbA9TOERObN1dHWb9KfAPG3bX9AEUfhbs5ARiANBIvghm2_zKeAZj5u1QsUCfp1qmVBFJW43Hlns-kMBySFTz9fotm7M98FCBL00aJWri5WLRdichVxosqRMaCSgcc4_LUUGrJ0epMvxoZbsdQynDA75AcKpWHCoCJV80eAOAWxImxickZo2BZo4bPj0Dbktm7w3NQwwD1IoxM9Fmw6Rvpb5tAe988dOzZcVjJrj1n9bxuSup6TNCTipoD-7_8vvC6gQrna8yX6XyDZbCOqd_risde6gnepD6B8_wiQUZ_y0DvEijBunAh-yWG2kA1ncRpkXo4qwLTx0oS7dhx2m00)
+
