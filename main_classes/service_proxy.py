@@ -1,12 +1,13 @@
-from main_classes.database_access import DatabaseAccess
+from main_classes.database_security_proxy import DatabaseSecurityProxy
 from flask import Flask, jsonify, request
 from utilities.response import Response
 from utilities.note_classes import Note, Task
-class ServiceProxy():
+class Service():
     def __init__(self):
         ##boilerplate
-        self.db_access = DatabaseAccess("database.db")
+        self.db_access = DatabaseSecurityProxy("database.db")
         self.app = Flask(__name__)
+
         @self.app.route('/')
         def home():
             return "<h1>You should not be here</h1>"
@@ -38,9 +39,8 @@ class ServiceProxy():
         def delete_user():
             data = request.get_json()
             username = data.get("username")
-            password = data.get("password")
             token = data.get("token")
-            rez = self.db_access.delete_user(username, password, token)
+            rez = self.db_access.delete_user(username, token)
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
         @self.app.route('/api/users/fetch', methods = ['POST'])
         def fetch_content():
