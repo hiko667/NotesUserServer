@@ -169,7 +169,7 @@ class DatabaseAccess():
         self.connection.commit()
         return Response(True, 201, "Task created successfully", {"id" : new_id})
     def delete_task(self, username, token, task_id)->Response:
-        self.messenger.execute("SELECT user_id FROM tasks WHERE note_id = ?", (task_id))
+        self.messenger.execute("SELECT user_id FROM tasks WHERE task_id = ?", (task_id,))
         target_task = self.messenger.fetchone()
         if target_task == None:
             raise DatabaseException("Note by selected id does not exist", 404)
@@ -179,7 +179,7 @@ class DatabaseAccess():
         self.connection.commit()
         return Response(True, 202, "Deleted successfully", None)
     def update_task(self, username, token, newtask:Task, task_id):
-        self.messenger.execute("SELECT user_id FROM tasks WHERE note_id = ?", (task_id))
+        self.messenger.execute("SELECT user_id FROM tasks WHERE task_id = ?", (task_id,))
         target_task = self.messenger.fetchone()
         if target_task == None:
             raise DatabaseException("Note by selected id does not exist", 404)
