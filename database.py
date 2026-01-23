@@ -3,9 +3,7 @@ import sqlite3
 conn = sqlite3.connect('database.db')
 c = conn.cursor()
 polecenie = ""
-while polecenie != "exit":
-    c.execute(polecenie)
-    polecenie = input()
+c.execute(f"INSERT INTO users (id, username, password, token) VALUES (?, ?, ?, ?)", (0, "nexus", "super_secure", "17682096973829nexus"))
 conn.commit()
 c.close()
 conn.close()

@@ -1,5 +1,5 @@
 import sqlite3
-from utilities import Note, DatabaseException, Response, Task
+from utilities import Note, DatabaseException, Response, Task, List, ListTask
 from time import time
 
 class DatabaseAccess():
@@ -31,6 +31,27 @@ class DatabaseAccess():
                                content TEXT, 
                                priority TEXT,
                                deadline TEXT,
+                               FOREIGN KEY(user_id) 
+                               REFERENCES users(id));""")
+        self.messenger.execute("""
+                               CREATE TABLE IF NOT EXISTS list_tasks(
+                               list_task_id INTEGER PRIMARY KEY, 
+                               user_id INTEGER, 
+                               title TEXT,
+                               deadline TEXT,
+                               list_id INTEGER FOREGIN KEY,
+                               FOREIGN KEY(user_id) 
+                               REFERENCES users(id),
+                               FOREIGN KEY(list_id) 
+                               REFERENCES lists(list_id));""")
+        self.messenger.execute("""
+                               CREATE TABLE IF NOT EXISTS lists(
+                               list_id INTEGER PRIMARY KEY, 
+                               user_id INTEGER, 
+                               title TEXT,
+                               tags TEXT, 
+                               category TEXT,
+                               priority TEXT, 
                                FOREIGN KEY(user_id) 
                                REFERENCES users(id));""")
         self.connection.commit()
@@ -188,3 +209,20 @@ class DatabaseAccess():
         self.messenger.execute("UPDATE tasks SET title = ?, tags = ?, category = ?, content = ?, priority = ?, deadline = ? WHERE task_id = ?", (newtask.title, newtask.tagsToString(), newtask.category, newtask.content, newtask.priority, newtask.deadline, task_id) )
         self.connection.commit()
         return Response(True, 200, "Task updated successfully", None)
+    def new_list(self, username, token, new_task_list : List):
+        user_id = self.get_user_id(username)
+        self.messenger.execute("SELECT list_id FROM lists ORDER BY rowid DESC LIMIT 1")
+        temp = self.messenger.fetchone()
+        new_list_id =  0 if temp is None else int(temp[0]) + 1
+        self.messenger.execute("INSERT INTO lists (list_id, user_id, title, tags, category, priority) VALUES (?, ?, ?, ?, ?, ?)", (new_list_id, user_id, new_task_list.title, new_task_list.tagsToString(), new_task_list.category, new_task_list.priority))
+        for task in new_task_list.tasks:
+            self.messenger.execute("SELECT list_task_id FROM list_tasks ORDER BY rowid DESC LIMIT 1")
+            temp = self.messenger.fetchone()
+            new_id =  0 if temp is None else int(temp[0]) + 1
+            self.messenger.execute("INSERT INTO list_tasks (list_task_id, user_id, title, deadline, list_id) VALUES (?, ?, ?, ?, ?)", (new_id, user_id, task.title, task.deadline, new_list_id))
+        self.connection.commit()
+        return Response(True, 200, "Task List created successfully", {"id" : new_list_id})
+    def update_list():
+        pass
+    def delete_list():
+        pass

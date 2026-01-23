@@ -1,7 +1,7 @@
 from main_classes.database_security_proxy import DatabaseSecurityProxy
 from flask import Flask, jsonify, request
 from utilities.response import Response
-from utilities.note_classes import Note, Task
+from utilities.note_classes import Note, Task, ListTask, List
 class Service():
     def __init__(self):
         ##boilerplate
@@ -118,4 +118,22 @@ class Service():
             deadline = data.get("deadline")
             task_id = data.get("task_id")
             rez = self.db_access.update_task(username, token, Task(title, tags, category, content, priority, deadline), task_id)   
+            return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response
+        ##Task lists
+        @self.app.route('/api/lists/new', methods = ['POST'])
+        def new_list():
+            data = request.get_json()
+            username = data.get("username")
+            token = data.get("token")
+            title  = data.get("title")
+            tags = data.get("tags")
+            category = data.get("category")
+            priority = data.get("priority")
+            tasks = data.get("tasks")
+            new_task_list = List(title, tags, category, priority)
+            for task in tasks:
+                list_task = ListTask(task["title"], task["deadline"])
+                new_task_list.add_task(list_task)
+            rez = self.db_access.new_list(username, token, new_task_list)   
+            print(rez.operation_message)
             return jsonify({"status": rez.status, "message": rez.operation_message, "data": rez.data_bundle}), rez.http_response

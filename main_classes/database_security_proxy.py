@@ -1,5 +1,5 @@
 import sqlite3
-from utilities import Note, DatabaseException, Response, Task
+from utilities import Note, DatabaseException, Response, Task, List, ListTask
 from main_classes.database_access import DatabaseAccess
 
 class DatabaseSecurityProxy():
@@ -137,3 +137,17 @@ class DatabaseSecurityProxy():
             return Response(False, e.code, e.content, None)
         except Exception as e:
             return Response(False, 400, f"Unhandled error: {e}", None)
+    def new_list(self, username, token, new_task_list : List):
+        try:
+            self.verify_access(username, token)
+            return self.database_access.new_list(username, token, new_task_list )
+        except DatabaseException as e:
+            return Response(False, e.code, e.content, None)
+            print(e)
+        except Exception as e:
+            return Response(False, 400, f"Unhandled error: {e}", None)
+            print(e)
+    def update_list():
+        pass
+    def delete_list():
+        pass
